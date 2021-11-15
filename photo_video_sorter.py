@@ -3,6 +3,7 @@ from exif import Image
 from pathlib import Path
 import shutil
 
+from tkinter.filedialog import askdirectory
 
 class Sorter:
     __slots__ = ["source_dir", "destination_dir", "image_suffix",
@@ -12,14 +13,12 @@ class Sorter:
         self.video_suffix = [".MPG", ".avi"]
 
     def get_source_dir(self):
-        # TODO input destination by user
-        temp_destination = "D://from/"
-        self.source_dir = Path(temp_destination)
+        source_directory = askdirectory()
+        self.source_dir = Path(source_directory)
 
     def get_destination_dir(self):
-        # TODO input destination by user
-        temp_destination = "D://to/"
-        self.destination_dir = Path(temp_destination)
+        destination_directory = askdirectory()
+        self.destination_dir = Path(destination_directory)
 
     def get_classified_file(self):
         files = self.source_dir.glob('**/*')
