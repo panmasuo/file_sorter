@@ -1,23 +1,25 @@
 from datetime import datetime
 from exif import Image
 from pathlib import Path
-import shutil
-
 from tkinter.filedialog import askdirectory
+
+import shutil
 
 class Sorter:
     __slots__ = ["source_dir", "destination_dir", "image_suffix",
                  "video_suffix"]
     def __init__(self):
-        self.image_suffix = [".jpg", ".JPG"]
-        self.video_suffix = [".MPG", ".avi"]
+        self.image_suffix = [".jpg", ".jpeg", ".JPG"]
+        self.video_suffix = [".3gp", ".MPG", ".avi", ".mp4"]
 
     def get_source_dir(self):
         source_directory = askdirectory()
+        # source_directory = "D:/from"
         self.source_dir = Path(source_directory)
 
     def get_destination_dir(self):
         destination_directory = askdirectory()
+        # destination_directory = "D:/to"
         self.destination_dir = Path(destination_directory)
 
     def get_classified_file(self):
@@ -43,24 +45,34 @@ class FileHandler:
     def __init__(self, _file, destination_dir):
         self._file = _file
         self.destination_dir = destination_dir
+        self._set_creation_time()
         self._expand_destination_directory_by_bin()
+        self._create_new_name()
 
     def copy(self):
-        shutil.copy2(self._file, self.destination_dir)
-        self._file = Path(self.destination_dir) / self._file.name
+        dst_file = Path(Path(self.destination_dir) / self.new_name)
+        if not dst_file.is_file():
+            shutil.copy2(self._file, self.destination_dir)
+            self._file = Path(self.destination_dir) / self._file.name
+        else:
+            return
 
     def rename(self):
-        # TODO catch file existing
-        new_name = (f"{self.create_time.month}-{self.create_time.day}_"
-                    f"{self.create_time.hour}-{self.create_time.minute}-"
-                    f"{self.create_time.second}{self._file.suffix}")
         try:
-            Path.rename(self._file, self._file.parent / new_name)
+            Path.rename(self._file, self._file.parent / self.new_name)
         except FileExistsError:
             pass  # file already exists, do not override
 
+    def _create_new_name(self):
+        self.new_name = (f"{self.create_time.month:02d}-{self.create_time.day:02d}_"
+                    f"{self.create_time.hour:02d}-{self.create_time.minute:02d}-"
+                    f"{self.create_time.second:02d}{self._file.suffix}")
+
     def _set_creation_time(self):
-        self.timestamp = self._file.stat().st_ctime
+        create_time = self._file.stat().st_ctime
+        modify_time = self._file.stat().st_mtime
+        # always pick older date
+        self.timestamp = create_time if create_time < modify_time else modify_time
         self.create_time = datetime.fromtimestamp(self.timestamp)
 
     def _expand_destination_directory_by_bin(self):
@@ -88,9 +100,17 @@ class Photo(FileHandler):
         self._expand_destination_directory_by_year()
 
     def _set_creation_time(self):
-        self.create_time = datetime.strptime(Image(self._file).datetime,
-                                             '%Y:%m:%d %H:%M:%S')
-        self.timestamp = self.create_time.timestamp
+        exif_image = Image(self._file)
+
+        try:
+            if exif_image.has_exif:
+                self.create_time = datetime.strptime(exif_image.datetime, '%Y:%m:%d %H:%M:%S')
+                self.timestamp = self.create_time.timestamp
+                return
+            else:
+                raise AttributeError
+        except AttributeError:
+            FileHandler._set_creation_time(self)
 
 
 class Video(FileHandler):
@@ -103,10 +123,15 @@ class Video(FileHandler):
 
 
 class Trash(FileHandler):
+    bin_folder_name = "trash"
+
     def __init__(self, _file, destination_dir):
         super().__init__(_file, destination_dir)
         self._set_creation_time()
         self._expand_destination_directory_by_year()
+
+    def rename(self):
+        pass  # do not rename Trash file
 
 sorter = Sorter()
 sorter.get_source_dir()
