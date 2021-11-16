@@ -3,6 +3,9 @@ from exif import Image
 from pathlib import Path
 from tkinter.filedialog import askdirectory
 
+from hachoir.parser import createParser
+from hachoir.metadata import extractMetadata
+
 import shutil
 
 class Sorter:
@@ -13,13 +16,13 @@ class Sorter:
         self.video_suffix = [".3gp", ".MPG", ".avi", ".mp4"]
 
     def get_source_dir(self):
+        source_directory = "D:/from"
         source_directory = askdirectory()
-        # source_directory = "D:/from"
         self.source_dir = Path(source_directory)
 
     def get_destination_dir(self):
+        destination_directory = "D:/to"
         destination_directory = askdirectory()
-        # destination_directory = "D:/to"
         self.destination_dir = Path(destination_directory)
 
     def get_classified_file(self):
@@ -69,6 +72,7 @@ class FileHandler:
                     f"{self.create_time.second:02d}{self._file.suffix}")
 
     def _set_creation_time(self):
+        test = self._file.stat()
         create_time = self._file.stat().st_ctime
         modify_time = self._file.stat().st_mtime
         # always pick older date
@@ -110,7 +114,7 @@ class Photo(FileHandler):
             else:
                 raise AttributeError
         except AttributeError:
-            FileHandler._set_creation_time(self)
+            super()._set_creation_time()
 
 
 class Video(FileHandler):
@@ -120,6 +124,22 @@ class Video(FileHandler):
         super().__init__(_file, destination_dir)
         self._set_creation_time()
         self._expand_destination_directory_by_year()
+
+    def _set_creation_time(self):
+        # https://gist.github.com/nikomiko/7492e5e82791c9ff989e2573ca180273
+        try:
+            if (parser := createParser(str(self._file))) is None:
+                raise AttributeError("Wrong file for parser")
+
+            metadata = extractMetadata(parser)
+
+            for line in metadata.exportPlaintext():
+                if '- Creation date' in (creation_date := line.split(':')):
+                    date_string = f"{creation_date[1]}:{creation_date[2]}:{creation_date[3]}"
+                    self.create_time = datetime.strptime(date_string, " %Y-%m-%d %H:%M:%S")
+                    self.timestamp = self.create_time.timestamp
+        except AttributeError:
+            super()._set_creation_time()
 
 
 class Trash(FileHandler):
