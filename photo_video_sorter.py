@@ -10,6 +10,9 @@ from hachoir.stream.input import NullStreamError
 import os
 import shutil
 
+from sorter.directories import get_directory
+
+
 class Sorter:
     def __init__(self):
         self.image_suffix = [".jpg", ".jpeg", ".JPG"]
@@ -23,14 +26,10 @@ class Sorter:
         return count
 
     def get_source_dir(self):
-        # source_directory = "D:/from"
-        source_directory = askdirectory()
-        self.source_dir = Path(source_directory)
+        self.source_dir = get_directory("Pick source directory")
 
     def get_destination_dir(self):
-        # destination_directory = "E:"
-        destination_directory = askdirectory()
-        self.destination_dir = Path(destination_directory)
+        self.destination_dir = get_directory("Pick destination directory")
 
     def get_classified_file(self):
         files = self.source_dir.glob('**/*')
@@ -189,10 +188,13 @@ class Trash(FileHandler):
 sorter = Sorter()
 sorter.get_source_dir()
 sorter.get_destination_dir()
-total_count = sorter.count_files()
 
-for i, _file in enumerate(sorter.get_classified_file()):
-    print("Progress: " + str(i) + "/" + str(total_count - 1))
-    _file.copy()
-    _file.rename()
-    # print(_file.time_source)
+print(sorter.source_dir)
+print(sorter.destination_dir)
+# total_count = sorter.count_files()
+
+# for i, _file in enumerate(sorter.get_classified_file()):
+#     print("Progress: " + str(i) + "/" + str(total_count - 1))
+#     _file.copy()
+#     _file.rename()
+#     # print(_file.time_source)
