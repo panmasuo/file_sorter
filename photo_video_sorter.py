@@ -1,16 +1,11 @@
 from datetime import datetime
-from exif import Image
 from pathlib import Path
-from tkinter.filedialog import askdirectory
 
-from hachoir.parser import createParser
-from hachoir.metadata import extractMetadata
-from hachoir.stream.input import NullStreamError
 
 import os
 import shutil
 
-from sorter.directories import get_directory
+from sorter.directories import get_directory_path
 
 
 class Sorter:
@@ -26,10 +21,10 @@ class Sorter:
         return count
 
     def get_source_dir(self):
-        self.source_dir = get_directory("Pick source directory")
+        self.source_dir = get_directory_path("Pick source directory")
 
     def get_destination_dir(self):
-        self.destination_dir = get_directory("Pick destination directory")
+        self.destination_dir = get_directory_path("Pick destination directory")
 
     def get_classified_file(self):
         files = self.source_dir.glob('**/*')
