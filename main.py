@@ -1,10 +1,10 @@
 from sorter.directories import get_directory_path
-from sorter.files import FileType
+from sorter.sorter import Sorter
 
-dir = get_directory_path("Source directory")
+src = get_directory_path("Source directory")
+dst = get_directory_path("Destination directory")
 
-files = dir.glob('**/*')
-for _file in files:
-    # print(_file)
-    if _file.is_file():
-        print(repr(FileType(_file)))
+sorter = Sorter(src, dst)
+for _file in sorter.get_files():
+    if _file.copy(sorter.destination):
+        _file.rename()
