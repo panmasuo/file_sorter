@@ -33,10 +33,10 @@ class FileType:
 
         dst /= str(self._date.year)
 
+        os.makedirs(dst, exist_ok=True)
+
         if self._should_rename():
             dst /= self._generated_name
-
-        os.makedirs(dst, exist_ok=True)
 
         return dst
 
