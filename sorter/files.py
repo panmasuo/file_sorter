@@ -1,8 +1,9 @@
 from pathlib import Path
+import os
 import shutil
 
 from sorter.classifier import get_file_classifier, RENAME_CLASSES
-from sorter.naming import create_name
+from sorter.naming import create_name_and_date
 
 
 class FileType:
@@ -10,16 +11,13 @@ class FileType:
     def __init__(self, file_path: Path):
         self._file = file_path
         self._file_class = get_file_classifier(self._file)
-        self._generated_name = create_name(self._file)
+        self._generated_name, self._date = create_name_and_date(self._file)
 
     def __str__(self):
         return self._file.name
 
     def copy(self, target: Path) -> bool:
-        target /= self._file_class.value
-
-        if self._should_rename():
-            target /= self._generated_name
+        target = self._create_destination(target)
 
         if not self._can_copy_and_rename(target):
             print(f"File '{self._file.name}' -> '{self._generated_name}' "
@@ -28,6 +26,19 @@ class FileType:
 
         self._file = Path(shutil.copy2(self._file, target))
         return True
+
+    def _create_destination(self, dst: Path) -> Path:
+        # TODO: single responsibility!
+        dst /= self._file_class.value
+
+        dst /= str(self._date.year)
+
+        if self._should_rename():
+            dst /= self._generated_name
+
+        os.makedirs(dst, exist_ok=True)
+
+        return dst
 
     def _can_copy_and_rename(self, target: Path) -> bool:
         return not target.is_file()

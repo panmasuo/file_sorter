@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 from plum import exceptions
+from typing import Tuple
 
 from exif import Image
 from hachoir.parser import createParser
@@ -8,7 +9,7 @@ from hachoir.metadata import extractMetadata
 from hachoir.core import config
 
 
-def create_name(file_: Path) -> str:
+def create_name_and_date(file_: Path) -> Tuple[str, datetime]:
     """Extracts date information from different sources,
     compares the dates then creating name using oldest
     date, timestamp and file suffix.
@@ -26,10 +27,11 @@ def create_name(file_: Path) -> str:
                       if (creation := func(file_))]
 
     date = min(creation_dates)
-
-    return (date.strftime("%Y-%m-%d_%H-%M-%S") +
+    name = (date.strftime("%Y-%m-%d_%H-%M-%S") +
             f"_{int(date.timestamp())}" +  # a timestamp for uniqueness
             f"{file_.suffix}")
+
+    return (name, date)
 
 
 def _meta_date(file_: Path) -> datetime | None:
