@@ -2,7 +2,7 @@ from enum import Enum
 from pathlib import Path
 
 
-class FileClassifier(Enum):
+class FileCategories(Enum):
     PHOTO = "photo"
     VIDEO = "video"
     TRASH = "trash"
@@ -10,23 +10,23 @@ class FileClassifier(Enum):
 
 FILE_IMAGE_SUFFIXES = {".jpg", ".jpeg", ".JPG"}
 FILE_VIDEO_SUFFIXES = {".3gp", ".MPG", ".avi", ".mp4", ".MP4"}
-RENAME_CLASSES = {FileClassifier.PHOTO, FileClassifier.VIDEO}
+RENAME_CATEGORIES = {FileCategories.PHOTO, FileCategories.VIDEO}
 
 
-def get_file_classifier(file: Path) -> FileClassifier:
+def get_file_category(file: Path) -> FileCategories:
     """Takes file and check its suffix against configured
     types. Returns class of the file based on that.
 
     Args:
-        file_ (Path): File path.
+        file (Path): File path.
 
     Returns:
-        FileClassifier: File class type.
+        FileCategories: File class type.
     """
     if file.suffix in FILE_IMAGE_SUFFIXES:
-        return FileClassifier.PHOTO
+        return FileCategories.PHOTO
 
     elif file.suffix in FILE_VIDEO_SUFFIXES:
-        return FileClassifier.VIDEO
+        return FileCategories.VIDEO
 
-    return FileClassifier.TRASH
+    return FileCategories.TRASH

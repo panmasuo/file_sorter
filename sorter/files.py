@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 import shutil
 
-from sorter.classifier import get_file_classifier, RENAME_CLASSES
+from sorter.categories import get_file_category, RENAME_CATEGORIES
 from sorter.naming import create_name_and_date
 
 
@@ -10,7 +10,7 @@ class FileType:
 
     def __init__(self, file_path: Path):
         self._file = file_path
-        self._file_class = get_file_classifier(self._file)
+        self._file_class = get_file_category(self._file)
         self._generated_name, self._date = create_name_and_date(self._file)
 
     def __str__(self):
@@ -44,4 +44,4 @@ class FileType:
         return not target.is_file()
 
     def _should_rename(self) -> bool:
-        return self._file_class in RENAME_CLASSES
+        return self._file_class in RENAME_CATEGORIES
