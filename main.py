@@ -10,6 +10,8 @@ if __name__ == "__main__":
     total_count = sorter.files_size()
 
     for i, _file in enumerate(sorter.get_files()):
-        print(f"Progress {i} / {total_count}")  # TODO: logger
+        print(f"\rProgress {i + 1} / {total_count} ", end="")  # TODO: logger
 
         _file.copy(sorter.destination)
+
+        # TODO: count misses
