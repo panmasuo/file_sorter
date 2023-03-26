@@ -4,10 +4,11 @@ from plum import exceptions
 from typing import Tuple
 
 from exif import Image
-from hachoir.parser import createParser
-from hachoir.metadata import extractMetadata
-from hachoir.stream.input import NullStreamError
 from hachoir.core import config
+from hachoir.metadata import extractMetadata
+from hachoir.parser import createParser
+from hachoir.stream.input import NullStreamError
+
 
 def create_name_and_date(file: Path) -> Tuple[str, datetime]:
     """Extracts timestamp information from different sources,
