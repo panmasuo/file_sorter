@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
 import os
 import shutil
 
 from sorter.categories import get_file_category, RENAME_CATEGORIES
 from sorter.naming import create_name_and_date
+
+log = logging.getLogger(__name__)
 
 
 class FileType:
@@ -20,8 +23,8 @@ class FileType:
         target = self._create_destination(target)
 
         if not self._can_copy_and_rename(target):
-            print(f"File '{self._file.name}' -> '{self._generated_name}' "
-                  "already exist!")  # TODO: logger
+            log.warn(f"File '{self._file.name}' -> '{self._generated_name}' "
+                     "already exist!")
             return False
 
         self._file = Path(shutil.copy2(self._file, target))
@@ -30,7 +33,6 @@ class FileType:
     def _create_destination(self, dst: Path) -> Path:
         # TODO: single responsibility!
         dst /= self._file_class.value
-
         dst /= str(self._date.year)
 
         os.makedirs(dst, exist_ok=True)

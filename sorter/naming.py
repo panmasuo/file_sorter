@@ -9,6 +9,8 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from hachoir.stream.input import NullStreamError
 
+config.quiet = True  # suppress hachoir log messages
+
 
 def create_name_and_date(file: Path) -> Tuple[str, datetime]:
     """Extracts timestamp information from different sources,
@@ -45,8 +47,6 @@ def _meta_date(file: Path) -> int | None:
 
 def _hachoir_date(file: Path) -> int | None:
     """Gets date using hachoir parser module."""
-    config.quiet = True  # suppress log messages
-    date = None
 
     try:
         if (parser := createParser(f"{file}")) is None:
@@ -57,10 +57,10 @@ def _hachoir_date(file: Path) -> int | None:
 
     except AttributeError:
         # raised on InputPipe object without "close" attribute
-        pass
+        return
 
     except NullStreamError:
-        pass
+        return
 
     if (timestamp := _convert_date_to_timestamp(date)):
         return _create_ns_timestamp(timestamp, 0)
@@ -68,7 +68,6 @@ def _hachoir_date(file: Path) -> int | None:
 
 def _exif_date(file: Path) -> int | None:
     """Gets date using exif metadata."""
-    date = None
     try:
         exif = Image(file)
         if exif.has_exif:
@@ -79,7 +78,7 @@ def _exif_date(file: Path) -> int | None:
 
     except exceptions.UnpackError:
         # called on while unpacking
-        pass
+        return
 
     if not (timestamp := _convert_date_to_timestamp(date)):
         return
@@ -99,6 +98,7 @@ def _convert_date_to_timestamp(date: Any) -> str | None:
 
     # TODO: what if we have decimal value? we don't want to lose that
     try:
+        # cast to int to remove decimals
         timestamp = int(date.timestamp())
     except AttributeError:
         return None
