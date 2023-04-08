@@ -23,8 +23,7 @@ class FileType:
         target = self._create_destination(target)
 
         if not self._can_copy_and_rename(target):
-            log.warn(f"File '{self._file.absolute()}' -> "
-                     f"'{self._generated_name}' "
+            log.warn(f"File '{self._file.absolute()}' -> '{target}' "
                      "already exist!")
             return False
 
