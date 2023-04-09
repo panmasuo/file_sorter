@@ -102,6 +102,9 @@ def _convert_date_to_timestamp(date: Any) -> str | None:
         timestamp = int(date.timestamp())
     except AttributeError:
         return None
+    except OSError:
+        # TODO: see what is that
+        return None
 
     return f"{timestamp}"
 

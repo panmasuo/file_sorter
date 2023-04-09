@@ -1,12 +1,13 @@
 from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import cpu_count
 from itertools import repeat
+from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Tuple, List
 import logging
 
 from sorter.files import FileType
 from sorter.categories import FileCategories
+from sorter.picker import Picker
 
 log = logging.getLogger(__name__)
 
@@ -53,8 +54,17 @@ class Sorter:
                 _create_and_copy,
                 zip(self._get_files(), repeat(self.destination))
             )
+        picker = Picker()
 
-        log.info([(f"{res}", res._duplicated) for res in result])
+        for file in result:
+            log.info(f"open {file._file}")
+            if not file._duplicated:
+                continue
+
+            if "c" == picker.compare(file):
+                # _create_and_copy(file)
+                print(f"copy {file} after all")
+
 
     def _get_files(self) -> Path:
         """Yields file paths."""
