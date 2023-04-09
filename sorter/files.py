@@ -12,6 +12,8 @@ log = logging.getLogger(__name__)
 class FileType:
 
     def __init__(self, file_path: Path):
+        self._duplicated = False
+
         self._file = file_path
         self._file_class = get_file_category(self._file)
         self._generated_name, self._date = create_name_and_date(self._file)
@@ -23,6 +25,8 @@ class FileType:
         target = self._create_destination(target)
 
         if not self._can_copy_and_rename(target):
+            self._set_duplicate(target)
+
             log.warn(f"File '{self._file.absolute()}' -> '{target}' "
                      "already exist!")
             return False
@@ -44,6 +48,11 @@ class FileType:
 
     def _can_copy_and_rename(self, target: Path) -> bool:
         return not target.is_file()
+
+    def _set_duplicate(self, target: Path) -> None:
+        self._duplicated = True
+
+        self._dup_target = target
 
     def _should_rename(self) -> bool:
         return self._file_class in RENAME_CATEGORIES

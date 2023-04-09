@@ -2,7 +2,7 @@ from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import cpu_count
 from itertools import repeat
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 import logging
 
 from sorter.files import FileType
@@ -11,7 +11,7 @@ from sorter.categories import FileCategories
 log = logging.getLogger(__name__)
 
 
-def _create_and_copy(target: Tuple[Path, Path]) -> bool:
+def _create_and_copy(target: Tuple[Path, Path]) -> List[FileType]:
     """Classify FileType and copy it to the destination.
 
     Args:
@@ -19,11 +19,12 @@ def _create_and_copy(target: Tuple[Path, Path]) -> bool:
             copy destination.
 
     Returns:
-        bool: True if success, False otherwise.
+        List[FileType]: List of all the files.
     """
     path, dst = target
     file = FileType(path)
-    return file.copy(dst)
+    file.copy(dst)
+    return file
 
 
 class Sorter:
@@ -42,15 +43,18 @@ class Sorter:
     def sort(self) -> None:
         """Sorts files based on their file type and moves them to their
         corresponding destination directories. This method uses
-        multiple processes to speed up the file copying and sorting process.
+        multiple processes.
         """
-        cpu = cpu_count()
-        log.info(f"using {cpu} cores")
-        with ProcessPoolExecutor(cpu) as executor:
-            executor.map(
+        result = None
+
+        with ProcessPoolExecutor((cpu := cpu_count())) as executor:
+            log.info(f"using {cpu} cpu cores")
+            result = executor.map(
                 _create_and_copy,
                 zip(self._get_files(), repeat(self.destination))
             )
+
+        log.info([(f"{res}", res._duplicated) for res in result])
 
     def _get_files(self) -> Path:
         """Yields file paths."""
