@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Tuple
 
 import cv2
 
@@ -6,34 +7,42 @@ from sorter.categories import FileCategories
 
 
 class Picker:
-    def __init__(self):
-        pass
+    WINDOW_NAME = "Compare and Pick"
 
-    def _read_files(self, file: Path):
+    def _read_files(self, file: Path) -> Tuple:
+        """Reads images with method dependend of file
+        category and returns photo options and its category.
+
+        Args:
+            file: file path.
+
+        Returns:
+            images, category: images options, and its category.
+        """
         category = file._file_class
         if category is FileCategories.PHOTO:
-            read = cv2.imread
+            image_read_method = cv2.imread
         elif category is FileCategories.VIDEO:
-            read = cv2.VideoCapture
+            image_read_method = cv2.VideoCapture
         else:
             return
 
-        options = (read(f"{file._file}"), read(f"{file._dup_target}"))
-        return options, category
+        images = (image_read_method(f"{file._file}"),
+                  image_read_method(f"{file._dup_target}"))
+        return images, category
 
     def _resize(self, options):
+        # resize photo options if does not match
         if options[0].shape[0] != options[1].shape[0]:
             height = max(options[0].shape[0], options[1].shape[0])
             width1 = int(options[0].shape[1] * height / options[0].shape[0])
             width2 = int(options[1].shape[1] * height / options[1].shape[0])
-            options = (cv2.resize(options[0], (width1, height)), cv2.resize(options[1], (width2, height)))
+            options = (cv2.resize(options[0], (width1, height)),
+                       cv2.resize(options[1], (width2, height)))
 
         concated = cv2.hconcat([options[0], options[1]])
-        # Get the dimensions of the screen
         screen_width, screen_height = 1280, 720
         screen_ratio = screen_width / screen_height
-
-        # Get the dimensions of the image
         img_height, img_width, _ = concated.shape
         img_ratio = img_width / img_height
 
@@ -61,15 +70,15 @@ class Picker:
                 return self._resize((frame1, frame2))
 
     def compare(self, file: Path):
-        cv2.namedWindow("Picker", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("Picker", 1280, 720)
+        cv2.namedWindow(self.WINDOW_NAME, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(self.WINDOW_NAME, 1280, 720)
 
         status = None
         # check for NULL
         options, category = self._read_files(file)
         screen = self._get_screen(options, category)
         while screen is not None:
-            cv2.imshow("Picker", screen)
+            cv2.imshow(self.WINDOW_NAME, screen)
             key = cv2.waitKey(1) & 0xFF
             if key == ord('c'):
                 status = "c"

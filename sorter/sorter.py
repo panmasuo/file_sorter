@@ -65,7 +65,6 @@ class Sorter:
                 # _create_and_copy(file)
                 print(f"copy {file} after all")
 
-
     def _get_files(self) -> Path:
         """Yields file paths."""
         for file in self._paths:

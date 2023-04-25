@@ -7,7 +7,7 @@ from exif import Image
 from hachoir.core import config
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
-from hachoir.stream.input import NullStreamError
+from hachoir.stream.input import NullStreamError, InputStreamError
 
 config.quiet = True  # suppress hachoir log messages
 
@@ -60,6 +60,10 @@ def _hachoir_date(file: Path) -> int | None:
         return
 
     except NullStreamError:
+        return
+
+    except InputStreamError:
+        # raised when trying to open directories
         return
 
     if (timestamp := _convert_date_to_timestamp(date)):
