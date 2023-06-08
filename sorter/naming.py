@@ -2,14 +2,16 @@ from datetime import datetime
 from pathlib import Path
 from plum import exceptions
 from typing import Any, Tuple
+import logging
 
 from exif import Image
 from hachoir.core import config
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
-from hachoir.stream.input import NullStreamError
+from hachoir.stream.input import NullStreamError, InputStreamError
 
 config.quiet = True  # suppress hachoir log messages
+log = logging.getLogger(__name__)
 
 
 def create_name_and_date(file: Path) -> Tuple[str, datetime]:
@@ -34,6 +36,7 @@ def create_name_and_date(file: Path) -> Tuple[str, datetime]:
     date = datetime.fromtimestamp(timestamp // 1000000000)
     name = (date.strftime("%Y-%m-%d") + f"_{timestamp}" + f"{file.suffix}")
 
+    log.debug(f"created name {name} for {file.absolute()}")
     return (name, date)
 
 
@@ -42,7 +45,10 @@ def _meta_date(file: Path) -> int | None:
     create_time = file.stat().st_ctime_ns
     modify_time = file.stat().st_mtime_ns
 
-    return min(create_time, modify_time)
+    ns_timestamp = min(create_time, modify_time)
+    log.debug(f"adding _meta_date {ns_timestamp}")
+
+    return ns_timestamp
 
 
 def _hachoir_date(file: Path) -> int | None:
@@ -55,15 +61,17 @@ def _hachoir_date(file: Path) -> int | None:
         metadata = extractMetadata(parser)
         date = metadata.get("creation_date", 0)
 
-    except AttributeError:
-        # raised on InputPipe object without "close" attribute
-        return
-
-    except NullStreamError:
+    except (AttributeError, NullStreamError, InputStreamError) as e:
+        # AttributeError raised on InputPipe object without "close" attribute'
+        # InputStreamError raised when trying to open directories
+        log.debug(e)
         return
 
     if (timestamp := _convert_date_to_timestamp(date)):
-        return _create_ns_timestamp(timestamp, 0)
+        ns_timestamp = _create_ns_timestamp(timestamp, 0)
+        log.debug(f"adding _hachoir_date {ns_timestamp}")
+
+        return ns_timestamp
 
 
 def _exif_date(file: Path) -> int | None:
@@ -76,8 +84,9 @@ def _exif_date(file: Path) -> int | None:
         else:
             return
 
-    except exceptions.UnpackError:
+    except (exceptions.UnpackError, ValueError):
         # called on while unpacking
+        log.debug("exif unpack error")
         return
 
     if not (timestamp := _convert_date_to_timestamp(date)):
@@ -86,7 +95,10 @@ def _exif_date(file: Path) -> int | None:
     if isinstance(subsecond, str):
         subsecond = int(subsecond)
 
-    return _create_ns_timestamp(timestamp, subsecond)
+    ns_timestamp = _create_ns_timestamp(timestamp, subsecond)
+    log.debug(f"adding _exif_date {ns_timestamp}")
+
+    return ns_timestamp
 
 
 def _convert_date_to_timestamp(date: Any) -> str | None:
@@ -100,12 +112,17 @@ def _convert_date_to_timestamp(date: Any) -> str | None:
     try:
         # cast to int to remove decimals
         timestamp = int(date.timestamp())
-    except AttributeError:
+    except AttributeError as e:
+        log.debug(e)
+        return None
+    except OSError as e:
+        # TODO: see what is that
+        log.debug(e)
         return None
 
     return f"{timestamp}"
 
 
 def _create_ns_timestamp(timestamp: str, nanoseconds: int = 0) -> int:
-    nanoseconds = 0
+    # filling with zeroes will make the timestamp work as nanosecond timestamp
     return int(f"{timestamp}{nanoseconds:<09d}")

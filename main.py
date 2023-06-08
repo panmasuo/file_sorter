@@ -2,7 +2,7 @@ import logging
 from sorter.directories import get_directory_path
 from sorter.sorter import Sorter
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format="[%(levelname)s %(name)s:%(lineno)d] %(message)s")
 log = logging.getLogger("main")
 
