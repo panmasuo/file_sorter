@@ -1,9 +1,12 @@
 from pathlib import Path
 from typing import Tuple
+import logging
 
 import cv2
 
 from sorter.categories import FileCategories
+
+log = logging.getLogger(__name__)
 
 
 class Picker:
@@ -76,7 +79,14 @@ class Picker:
         status = None
         # check for NULL
         options, category = self._read_files(file)
-        screen = self._get_screen(options, category)
+
+        try:
+            screen = self._get_screen(options, category)
+        except AttributeError as e:
+            # no "shape" attribute on some objects
+            log.debug(e)
+            return "n"
+
         while screen is not None:
             cv2.imshow(self.WINDOW_NAME, screen)
             key = cv2.waitKey(1) & 0xFF

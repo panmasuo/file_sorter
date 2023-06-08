@@ -49,21 +49,23 @@ class Sorter:
         result = None
 
         with ProcessPoolExecutor((cpu := cpu_count())) as executor:
+        # with ProcessPoolExecutor(1) as executor:
             log.info(f"using {cpu} cpu cores")
             result = executor.map(
                 _create_and_copy,
                 zip(self._get_files(), repeat(self.destination))
             )
-        picker = Picker()
 
+        picker = Picker()
         for file in result:
-            log.info(f"open {file._file}")
             if not file._duplicated:
                 continue
 
             if "c" == picker.compare(file):
-                # _create_and_copy(file)
-                print(f"copy {file} after all")
+                # force rename
+                file.rename_duplicate()
+                # copy again
+                file.copy(self.destination)
 
     def _get_files(self) -> Path:
         """Yields file paths."""

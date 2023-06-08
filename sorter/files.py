@@ -31,8 +31,31 @@ class FileType:
                      "already exist!")
             return False
 
-        self._file = Path(shutil.copy2(self._file, target))
+        try:
+            self._file = Path(shutil.copy2(self._file, target))
+        except PermissionError as e:
+            log.error(f"file not copied: {e}")
+
         return True
+
+    def rename_duplicate(self) -> None:
+        if not self._duplicated:
+            return
+
+        i = 1
+        while not self._can_copy_and_rename(self._dup_target):
+            rename = (self._dup_target.stem[:-1] +
+                      f"{i}" + f"{self._file.suffix}")
+
+            try:
+                self._dup_target.rename(self._dup_target.parent.absolute() /
+                                        rename)
+            except FileExistsError:
+                i += 1
+
+        self._generated_name = self._dup_target.name
+        log.debug(f"created new destination for duplicate {self._dup_target}"
+                  f": {self._generated_name}")
 
     def _create_destination(self, dst: Path) -> Path:
         # TODO: single responsibility!
