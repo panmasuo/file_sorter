@@ -1,4 +1,8 @@
 import logging
+import sys
+
+from duplicate_images import duplicate as di
+
 from sorter.directories import get_directory_path
 from sorter.sorter import Sorter
 
@@ -15,3 +19,9 @@ if __name__ == '__main__':
 
     sorter = Sorter(src, dst)
     sorter.sort()
+
+    # use duplicate_images module
+    # hardcode argparse arguments before calling duplicate_images
+    # "call find_dups -h" for more info
+    sys.argv[1:] = ["--on-equal", "delete-smallest", f"{dst}"]
+    di.main()

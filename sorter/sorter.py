@@ -7,7 +7,6 @@ import logging
 
 from sorter.files import FileType
 from sorter.categories import FileCategories
-from sorter.picker import Picker
 
 log = logging.getLogger(__name__)
 
@@ -46,28 +45,14 @@ class Sorter:
         corresponding destination directories. This method uses
         multiple processes.
         """
-        result = None
-
         with ProcessPoolExecutor((cpu := cpu_count())) as executor:
-        # with ProcessPoolExecutor(1) as executor:
             log.info(f"using {cpu} cpu cores")
-            result = executor.map(
+            executor.map(
                 _create_and_copy,
                 zip(self._get_files(), repeat(self.destination))
             )
 
-        picker = Picker()
-        for file in result:
-            if not file._duplicated:
-                continue
-
-            if "c" == picker.compare(file):
-                # force rename
-                file.rename_duplicate()
-                # copy again
-                file.copy(self.destination)
-
-    def _get_files(self) -> Path:
+    def _get_files(self):
         """Yields file paths."""
         for file in self._paths:
             yield Path(file)

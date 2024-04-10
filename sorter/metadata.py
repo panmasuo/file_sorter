@@ -32,8 +32,10 @@ def create_name_and_date(file: Path) -> Tuple[str, datetime]:
     timestamps = [timestamp for func in date_functions
                   if (timestamp := func(file))]
 
+    # take the oldest timestamp - to be sure it is the real one
     timestamp = min(timestamps)
     date = datetime.fromtimestamp(timestamp // 1000000000)
+    # e.g. 2005-04-02_16000000000.jpg
     name = (date.strftime("%Y-%m-%d") + f"_{timestamp}" + f"{file.suffix}")
 
     log.debug(f"created name {name} for {file.absolute()}")
@@ -53,7 +55,6 @@ def _meta_date(file: Path) -> int | None:
 
 def _hachoir_date(file: Path) -> int | None:
     """Gets date using hachoir parser module."""
-
     try:
         if (parser := createParser(f"{file}")) is None:
             return
@@ -108,7 +109,6 @@ def _convert_date_to_timestamp(date: Any) -> str | None:
     if isinstance(date, str):
         date = datetime.strptime(date, "%Y:%m:%d %H:%M:%S")
 
-    # TODO: what if we have decimal value? we don't want to lose that
     try:
         # cast to int to remove decimals
         timestamp = int(date.timestamp())
@@ -116,7 +116,6 @@ def _convert_date_to_timestamp(date: Any) -> str | None:
         log.debug(e)
         return None
     except OSError as e:
-        # TODO: see what is that
         log.debug(e)
         return None
 
