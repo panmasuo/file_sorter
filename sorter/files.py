@@ -27,8 +27,8 @@ class FileType:
         if not self._can_copy_and_rename(target):
             self._set_duplicate(target)
 
-            log.warn(f"File '{self._file.absolute()}' -> '{target}' "
-                     "already exist!")
+            log.debug(f"File '{self._file.absolute()}' -> '{target}' "
+                      "already exist!")
             return False
 
         try:
