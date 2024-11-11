@@ -4,7 +4,7 @@ import os
 import shutil
 
 from sorter.categories import get_file_category, RENAME_CATEGORIES
-from sorter.naming import create_name_and_date
+from sorter.metadata import create_name_and_date
 
 log = logging.getLogger(__name__)
 
