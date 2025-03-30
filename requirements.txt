@@ -2,3 +2,4 @@ duplicate_images
 exif
 hachoir
 opencv-python
+pytest
