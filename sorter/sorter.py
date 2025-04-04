@@ -23,7 +23,12 @@ def _create_and_copy(target: Tuple[Path, Path]) -> List[FileType]:
     """
     path, dst = target
     file = FileType(path)
+
     file.copy(dst)
+    # # if duplicate found, rename and try to copy again
+    # while not file.copy(dst):
+    #     file.rename_duplicate()
+
     return file
 
 

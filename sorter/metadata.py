@@ -5,12 +5,17 @@ from typing import Any, Tuple
 import logging
 
 from exif import Image
-from hachoir.core import config
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from hachoir.stream.input import NullStreamError, InputStreamError
 
-config.quiet = True  # suppress hachoir log messages
+# imports for loggers
+from exif._image import logger as exif_logger
+from hachoir.core import config as hachor_logger
+
+hachor_logger.quiet = True  # suppress hachoir log messages
+exif_logger.setLevel(logging.CRITICAL)  # suppress exif log messages
+
 log = logging.getLogger(__name__)
 
 
@@ -32,13 +37,13 @@ def create_name_and_date(file: Path) -> Tuple[str, datetime]:
     timestamps = [timestamp for func in date_functions
                   if (timestamp := func(file))]
 
-    # take the oldest timestamp - to be sure it is the real one
+    # take oldest timestamp - to be sure it is the real one, remove 1980-01-01
+    timestamps = list(filter(lambda x: x != 315529200000000000, timestamps))
     timestamp = min(timestamps)
+
     date = datetime.fromtimestamp(timestamp // 1000000000)
     # e.g. 2005-04-02_16000000000.jpg
     name = (date.strftime("%Y-%m-%d") + f"_{timestamp}" + f"{file.suffix}")
-
-    log.debug(f"created name {name} for {file.absolute()}")
     return (name, date)
 
 
@@ -48,8 +53,6 @@ def _meta_date(file: Path) -> int | None:
     modify_time = file.stat().st_mtime_ns
 
     ns_timestamp = min(create_time, modify_time)
-    log.debug(f"adding _meta_date {ns_timestamp}")
-
     return ns_timestamp
 
 
@@ -63,15 +66,13 @@ def _hachoir_date(file: Path) -> int | None:
         date = metadata.get("creation_date", 0)
 
     except (AttributeError, NullStreamError, InputStreamError) as e:
-        # AttributeError raised on InputPipe object without "close" attribute'
+        # AttributeError raised on InputPipe object without "close" attribute
         # InputStreamError raised when trying to open directories
         log.debug(e)
         return
 
     if (timestamp := _convert_date_to_timestamp(date)):
         ns_timestamp = _create_ns_timestamp(timestamp, 0)
-        log.debug(f"adding _hachoir_date {ns_timestamp}")
-
         return ns_timestamp
 
 
@@ -85,9 +86,9 @@ def _exif_date(file: Path) -> int | None:
         else:
             return
 
-    except (exceptions.UnpackError, ValueError):
+    except (exceptions.UnpackError, ValueError) as e:
         # called on while unpacking
-        log.debug("exif unpack error")
+        log.debug(e)
         return
 
     if not (timestamp := _convert_date_to_timestamp(date)):
@@ -97,7 +98,6 @@ def _exif_date(file: Path) -> int | None:
         subsecond = int(subsecond)
 
     ns_timestamp = _create_ns_timestamp(timestamp, subsecond)
-    log.debug(f"adding _exif_date {ns_timestamp}")
 
     return ns_timestamp
 
@@ -112,10 +112,7 @@ def _convert_date_to_timestamp(date: Any) -> str | None:
     try:
         # cast to int to remove decimals
         timestamp = int(date.timestamp())
-    except AttributeError as e:
-        log.debug(e)
-        return None
-    except OSError as e:
+    except (AttributeError, OSError) as e:
         log.debug(e)
         return None
 

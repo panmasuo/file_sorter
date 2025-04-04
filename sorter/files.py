@@ -74,7 +74,6 @@ class FileType:
 
     def _set_duplicate(self, target: Path) -> None:
         self._duplicated = True
-
         self._dup_target = target
 
     def _should_rename(self) -> bool:
