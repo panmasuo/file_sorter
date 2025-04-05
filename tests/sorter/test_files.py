@@ -1,10 +1,13 @@
 from pathlib import Path
 
-from sorter.files import FileType
 from conftest import TEST_IMAGE_FILES
+from sorter.files import FileType
 
 
 def test_if_same_metadata_then_add_iterator():
+    """Copies same file multiple times and checks if renaming was correctly
+    applied.
+    """
     photo = TEST_IMAGE_FILES["image_001"]
     NO_OF_COPIES = 3
 

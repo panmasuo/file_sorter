@@ -14,7 +14,12 @@ from exif._image import logger as exif_logger
 from hachoir.core import config as hachor_logger
 
 hachor_logger.quiet = True  # suppress hachoir log messages
-exif_logger.setLevel(logging.CRITICAL)  # suppress exif log messages
+
+# TODO any suppresing of the exif is not working
+# exif_logger.setLevel(logging.CRITICAL)  # suppress exif log messages
+for handler in exif_logger.handlers[:]:
+    exif_logger.removeHandler(handler)
+
 
 log = logging.getLogger(__name__)
 
@@ -86,7 +91,7 @@ def _exif_date(file: Path) -> int | None:
         else:
             return
 
-    except (exceptions.UnpackError, ValueError) as e:
+    except (exceptions.UnpackError, ValueError, RuntimeWarning) as e:
         # called on while unpacking
         log.debug(e)
         return

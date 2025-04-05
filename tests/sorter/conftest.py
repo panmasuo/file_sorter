@@ -3,8 +3,9 @@ from datetime import datetime
 from pathlib import Path
 
 # TODO find picture that creates that error:
-# D:\workspace\file_sorter\env\Lib\site-packages\exif\_image.py:171: RuntimeWarning: ASCII tag contains -1 fewer bytes than specified
-#   retval = getattr(self, attribute)
+# D:\workspace\file_sorter\env\Lib\site-packages\exif\_image.py:171:
+#   RuntimeWarning: ASCII tag contains -1 fewer bytes than specified
+#       retval = getattr(self, attribute)
 
 TEST_IMAGE_FILES = {
     # image with "[err!] [/exif/content/exif[0]/value[27]/data[2]]"
@@ -44,7 +45,7 @@ def handle_output_directory():
     testing session.
     """
     output_dir = Path("tests/output")
-    output_dir.mkdir()
+    output_dir.mkdir(exist_ok=True)
 
     yield
 
@@ -52,4 +53,15 @@ def handle_output_directory():
     if not output_dir.exists():
         return
 
-    _ = [item.unlink() for item in output_dir.iterdir() if item.is_file()]
+    # remove files
+    for item in output_dir.rglob("*"):
+        if item.is_file():
+            item.unlink()
+
+    # remove directories
+    for item in sorted(output_dir.rglob("*"), key=lambda obj: -len(obj.parts)):
+        # if is dir and does not contain anything
+        if item.is_dir() and not any(item.iterdir()):
+            item.rmdir()
+    else:
+        output_dir.rmdir()
