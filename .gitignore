@@ -1,3 +1,6 @@
 env
 data
 __pycache__
+testy
+
+logs.log

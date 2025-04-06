@@ -3,6 +3,8 @@ from pathlib import Path
 
 
 class FileCategories(Enum):
+    """Categories of the files that can be sorted into their separate
+    directory."""
     PHOTO = "photo"
     VIDEO = "video"
     TRASH = "trash"
