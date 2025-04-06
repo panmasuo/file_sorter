@@ -8,6 +8,13 @@ from sorter.metadata import create_name_and_date
 
 log = logging.getLogger(__name__)
 
+copy_log = logging.getLogger("copy")
+file_handler = logging.FileHandler("copy.log", mode="a")
+file_handler.setFormatter(logging.Formatter("%(asctime)s: %(message)s"))
+
+copy_log.propagate = False
+copy_log.addHandler(file_handler)
+
 
 class FileType:
 
@@ -27,14 +34,17 @@ class FileType:
         if not self._can_copy_and_rename(target):
             self._set_duplicate(target)
 
-            log.debug(f"File '{self._file.absolute()}' -> '{target}' "
-                      "already exist!")
+            copy_log.info(f"[FAIL] '{self._file.absolute()}' -> '{target}' "
+                          "already exist!")
             return False
 
         try:
+            old_path = self._file.absolute()
+
             self._file = Path(shutil.copy2(self._file, target))
-        except PermissionError as e:
-            log.error(f"file not copied: {e}")
+            copy_log.info(f"[OK] '{old_path}' -> '{target}'")
+        except PermissionError:
+            copy_log.info(f"[FAIL] '{self._file.absolute()}' file not copied")
 
         return True
 
