@@ -13,7 +13,7 @@ def test_if_same_metadata_then_add_iterator():
 
     expected_names = [
         # replace last digit with i, e.g. abc_000.jpg, abc_001.jpg ...
-        f"{photo["name"][:-5]}{i}{photo["name"][-4:]}"
+        f"{photo['name'][:-5]}{i}{photo['name'][-4:]}"
         for i in range(NO_OF_COPIES)
     ]
 

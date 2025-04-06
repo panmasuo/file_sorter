@@ -13,7 +13,7 @@ class DummyPath:
 
 def test_if_suffix_in_rename_category_then_return_trash_category():
     """If suffix given in DummyPath object is not present in declared
-    image or video suffixes, it is ategorized as trash.
+    image or video suffixes, it is categorized as trash.
     """
     assert FileCategories.TRASH is get_file_category(DummyPath)
 
