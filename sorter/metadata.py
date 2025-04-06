@@ -9,18 +9,6 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from hachoir.stream.input import NullStreamError, InputStreamError
 
-# imports for loggers
-from exif._image import logger as exif_logger
-from hachoir.core import config as hachor_logger
-
-hachor_logger.quiet = True  # suppress hachoir log messages
-
-# TODO any suppresing of the exif is not working
-# exif_logger.setLevel(logging.CRITICAL)  # suppress exif log messages
-for handler in exif_logger.handlers[:]:
-    exif_logger.removeHandler(handler)
-
-
 log = logging.getLogger(__name__)
 
 

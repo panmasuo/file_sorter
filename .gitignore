@@ -1,6 +1,5 @@
-env
-data
-__pycache__
-testy
+__pycache__/
+env/
+data/
 
-logs.log
+*.log
