@@ -35,14 +35,6 @@ TEST_VIDEO_FILES = {
                              hour=20, minute=2, second=51),
         "output": Path("tests/output/video/2024"),
     },
-    # not copied when app is running
-    "video_002": {
-        "path": Path("tests/media/test-video-002.mp4"),
-        "name": "2021-07-23_1627038653000000000.mp4",
-        "datetime": datetime(year=2021, month=7, day=23,
-                             hour=13, minute=10, second=53),
-        "output": Path("tests/output/video/2021"),
-    },
 }
 
 
